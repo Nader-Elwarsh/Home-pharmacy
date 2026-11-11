@@ -3,7 +3,11 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { defineConfig } from 'vitest/config';
 
+// على GitHub Pages يعمل الموقع تحت مسار فرعي (/اسم-المستودع/)، فيُمرَّر عبر BASE_PATH
+const base = process.env.BASE_PATH ?? '/';
+
 export default defineConfig({
+  base,
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
@@ -19,8 +23,8 @@ export default defineConfig({
         lang: 'ar',
         dir: 'rtl',
         display: 'standalone',
-        start_url: '/',
-        scope: '/',
+        start_url: base,
+        scope: base,
         theme_color: '#0f766e',
         background_color: '#f6faf9',
         icons: [
@@ -36,7 +40,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        navigateFallback: '/index.html',
+        navigateFallback: `${base}index.html`,
       },
     }),
   ],
