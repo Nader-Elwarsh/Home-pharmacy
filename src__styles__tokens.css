@@ -1,0 +1,26 @@
+:root {
+  --c-bg: #f6faf9;
+  --c-surface: #ffffff;
+  --c-text: #12302d;
+  --c-muted: #4a625f;
+  --c-primary: #0f766e;
+  --c-primary-contrast: #ffffff;
+  --c-border: #cfe0dd;
+
+  --c-ok-bg: #e3f5ec;
+  --c-ok-fg: #14532d;
+  --c-warning-bg: #fdf1d6;
+  --c-warning-fg: #6b4a00;
+  --c-danger-bg: #fde4e4;
+  --c-danger-fg: #7f1d1d;
+  --c-info-bg: #e1effa;
+  --c-info-fg: #12426b;
+
+  --radius: 12px;
+  --tap: 44px;
+  --fs-base: 1.125rem;
+  --space-1: 0.5rem;
+  --space-2: 1rem;
+  --space-3: 1.5rem;
+  --nav-height: 64px;
+}

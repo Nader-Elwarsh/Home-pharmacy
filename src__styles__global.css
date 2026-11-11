@@ -1,0 +1,182 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Segoe UI', Tahoma, 'Noto Naskh Arabic', 'Noto Sans Arabic', system-ui, sans-serif;
+  font-size: var(--fs-base);
+  line-height: 1.7;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+h2 {
+  margin: 0 0 var(--space-1);
+  font-size: 1.25rem;
+}
+p {
+  margin: var(--space-1) 0;
+}
+
+.muted {
+  color: var(--c-muted);
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-primary);
+  outline-offset: 2px;
+}
+
+/* التخطيط: هاتف أولًا، شريط سفلي */
+.app-shell {
+  min-height: 100vh;
+}
+
+.main-content {
+  padding-block: var(--space-2) calc(var(--nav-height) + var(--space-3));
+  padding-inline: var(--space-2);
+  max-inline-size: 760px;
+  margin-inline: auto;
+}
+
+.main-nav {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  display: flex;
+  background: var(--c-surface);
+  border-block-start: 1px solid var(--c-border);
+  min-block-size: var(--nav-height);
+  z-index: 10;
+}
+
+.nav-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--tap);
+  gap: 2px;
+  color: var(--c-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.nav-link.active {
+  color: var(--c-primary);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--c-primary);
+}
+
+.nav-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+/* سطح المكتب: قائمة جانبية في جهة البداية (يمين في RTL) */
+@media (min-width: 900px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+  }
+  .main-nav {
+    position: sticky;
+    inset-block-start: 0;
+    block-size: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: var(--space-1);
+    padding: var(--space-2);
+    border-block-start: 0;
+    border-inline-end: 1px solid var(--c-border);
+  }
+  .nav-link {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-1);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius);
+    font-size: var(--fs-base);
+  }
+  .nav-link.active {
+    box-shadow: none;
+    background: var(--c-ok-bg);
+  }
+  .main-content {
+    padding-block-end: var(--space-3);
+  }
+}
+
+.page-header {
+  margin-block-end: var(--space-2);
+}
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plain-list li {
+  padding-block: 0.25rem;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+.badge-ok {
+  background: var(--c-ok-bg);
+  color: var(--c-ok-fg);
+}
+.badge-warning {
+  background: var(--c-warning-bg);
+  color: var(--c-warning-fg);
+}
+.badge-danger {
+  background: var(--c-danger-bg);
+  color: var(--c-danger-fg);
+}
+.badge-info {
+  background: var(--c-info-bg);
+  color: var(--c-info-fg);
+}
+
+.btn {
+  min-block-size: var(--tap);
+  min-inline-size: var(--tap);
+  padding-inline: var(--space-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--c-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.btn-primary {
+  background: var(--c-primary);
+  color: var(--c-primary-contrast);
+}
+.btn-secondary {
+  background: var(--c-surface);
+  color: var(--c-primary);
+}
