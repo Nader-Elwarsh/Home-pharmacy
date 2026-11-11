@@ -5,8 +5,8 @@ export interface RoadmapModule {
 
 export const ROADMAP_MODULES: RoadmapModule[] = [
   { title: 'الحسابات ودعوة أفراد الأسرة والمشاركة', phase: 'P8' },
-  { title: 'الأصناف والكتالوج', phase: 'P3' },
-  { title: 'حركات المخزون', phase: 'P4' },
+  { title: 'الكتالوج المركزي المعتمد', phase: 'P11' },
+  { title: 'صرف واستهلاك وتسوية المخزون', phase: 'P4' },
   { title: 'التحاليل والروشتات', phase: 'P5' },
   { title: 'العلاجات والرعاية', phase: 'P6' },
   { title: 'المزامنة', phase: 'P7–P8' },
