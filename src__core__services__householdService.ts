@@ -19,7 +19,17 @@ export function toUserMessage(e: unknown): string {
   if (code.endsWith('unavailable') || code === 'auth/network-request-failed') {
     return 'تعذر الاتصال بالإنترنت. أعد المحاولة عند توفر الاتصال';
   }
-  return 'حدث خطأ غير متوقع. أعد المحاولة';
+  if (code === 'auth/operation-not-allowed' || code === 'auth/configuration-not-found') {
+    return 'الدخول بحساب Google غير مفعّل في Firebase (Authentication ثم Sign-in method)';
+  }
+  if (code === 'auth/invalid-api-key' || code === 'auth/api-key-not-valid') {
+    return 'مفتاح Firebase غير صالح. راجع إعدادات الموقع';
+  }
+  if (code === 'auth/web-storage-unsupported') {
+    return 'المتصفح يمنع التخزين اللازم للدخول. عطّل وضع التصفح الخاص أو اسمح بملفات تعريف الارتباط';
+  }
+  // نُظهر الرمز الفني ليسهل تشخيص الخطأ
+  return code ? `حدث خطأ غير متوقع (${code})` : 'حدث خطأ غير متوقع. أعد المحاولة';
 }
 
 export async function createHousehold(user: AuthUser, rawName: string): Promise<void> {
