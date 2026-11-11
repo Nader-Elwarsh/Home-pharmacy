@@ -18,12 +18,3 @@ export function HealthPage() {
     </>
   );
 }
-
-export function FamilyPage() {
-  return (
-    <>
-      <PageHeader title="الأسرة" subtitle="أفراد الأسرة والمتابعة" />
-      <ComingSoon phase="P1" what="إنشاء المنزل وإضافة أفراد الأسرة ثم المتابعة في P6" />
-    </>
-  );
-}

@@ -4,7 +4,7 @@ export interface RoadmapModule {
 }
 
 export const ROADMAP_MODULES: RoadmapModule[] = [
-  { title: 'الحسابات والمنازل', phase: 'P1' },
+  { title: 'دعوة أفراد الأسرة والأدوار المتقدمة', phase: 'P1-ب' },
   { title: 'الأصناف والكتالوج', phase: 'P3' },
   { title: 'حركات المخزون', phase: 'P4' },
   { title: 'التحاليل والروشتات', phase: 'P5' },

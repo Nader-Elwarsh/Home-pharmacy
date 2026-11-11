@@ -1,0 +1,102 @@
+rules_version = '2';
+
+// قواعد Firestore — P1-أ. الأصل: منع كل شيء، ثم السماح بما يلزم فقط.
+// الصلاحيات هنا هي المرجع الفعلي؛ ما في الواجهة لتحسين التجربة فقط.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function memberPath(hid, uid) {
+      return /databases/$(database)/documents/households/$(hid)/members/$(uid);
+    }
+
+    function isMember(hid) {
+      return signedIn() && exists(memberPath(hid, request.auth.uid));
+    }
+
+    function roleOf(hid) {
+      return get(memberPath(hid, request.auth.uid)).data.role;
+    }
+
+    function canEdit(hid) {
+      return isMember(hid) && roleOf(hid) in ['owner', 'admin', 'member'];
+    }
+
+    function validName(v) {
+      return v is string && v.size() > 0 && v.size() <= 80;
+    }
+
+    // ===== المنازل =====
+    match /households/{hid} {
+      allow read: if isMember(hid);
+
+      // الإنشاء: المستخدم هو المالك، والخطة مجانية
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.id == hid
+        && request.resource.data.plan == 'free'
+        && validName(request.resource.data.name);
+
+      // تعديل الاسم للمالك فقط، دون تغيير المالك أو الخطة
+      allow update: if isMember(hid) && roleOf(hid) == 'owner'
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.plan == resource.data.plan
+        && validName(request.resource.data.name);
+
+      allow delete: if false;
+
+      // ===== الأعضاء =====
+      match /members/{uid} {
+        allow read: if isMember(hid);
+
+        // عضوية المالك الأولى فقط، ضمن نفس دفعة إنشاء المنزل.
+        // دعوة الأعضاء الآخرين تُضاف في P1-ب.
+        allow create: if signedIn()
+          && uid == request.auth.uid
+          && request.resource.data.uid == uid
+          && request.resource.data.role == 'owner'
+          && getAfter(/databases/$(database)/documents/households/$(hid)).data.ownerUid == request.auth.uid;
+
+        allow update, delete: if false;
+      }
+
+      // ===== أفراد الأسرة =====
+      match /profiles/{pid} {
+        allow read: if isMember(hid) && roleOf(hid) != 'care_follower';
+
+        allow create: if canEdit(hid)
+          && request.resource.data.id == pid
+          && request.resource.data.householdId == hid
+          && request.resource.data.createdBy == request.auth.uid
+          && validName(request.resource.data.name);
+
+        allow update: if canEdit(hid)
+          && request.resource.data.householdId == resource.data.householdId
+          && validName(request.resource.data.name);
+
+        // لا حذف: الأرشفة فقط في مراحل لاحقة
+        allow delete: if false;
+      }
+    }
+
+    // ===== فهرس عضويات المستخدم =====
+    match /users/{uid}/memberships/{hid} {
+      allow read: if signedIn() && request.auth.uid == uid;
+
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.householdId == hid
+        && request.resource.data.role == 'owner'
+        && getAfter(/databases/$(database)/documents/households/$(hid)).data.ownerUid == uid;
+
+      allow update, delete: if false;
+    }
+
+    // أي مسار آخر: ممنوع
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

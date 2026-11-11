@@ -1,7 +1,8 @@
 import { Route, Routes } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { DashboardPage } from '@/modules/dashboard/DashboardPage';
-import { CabinetPage, FamilyPage, HealthPage } from '@/modules/placeholders/placeholderPages';
+import { FamilyPage } from '@/modules/family/FamilyPage';
+import { CabinetPage, HealthPage } from '@/modules/placeholders/placeholderPages';
 import { MorePage } from '@/modules/settings/MorePage';
 import { AppShell } from './AppShell';
 
