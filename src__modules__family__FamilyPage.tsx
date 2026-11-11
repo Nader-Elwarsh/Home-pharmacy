@@ -2,15 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/Button';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
-import type { AuthUser, FamilyOverview } from '@/core/domain/householdTypes';
-import { canEditProfiles, ROLE_LABELS } from '@/core/domain/roles';
-import { signInWithGoogle, signOutUser } from '@/core/services/authService';
 import {
-  addFamilyProfile,
-  createHousehold,
+  addLocalProfile,
+  createLocalHousehold,
   toUserMessage,
-} from '@/core/services/householdService';
-import { useAuth } from '@/modules/auth/useAuth';
+  type LocalFamily,
+} from '@/core/services/familyService';
 import { useFamily } from './useFamily';
 
 function ErrorLine({ message }: { message: string | null }) {
@@ -22,35 +19,7 @@ function ErrorLine({ message }: { message: string | null }) {
   );
 }
 
-function SignIn() {
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  async function onClick() {
-    setBusy(true);
-    setError(null);
-    try {
-      await signInWithGoogle();
-    } catch (e) {
-      setError(toUserMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <section className="card" aria-labelledby="signin-title">
-      <h2 id="signin-title">تسجيل الدخول</h2>
-      <p>سجّل الدخول بحساب Google لإنشاء منزلك وإضافة أفراد أسرتك.</p>
-      <Button onClick={onClick} disabled={busy}>
-        {busy ? 'جارٍ الدخول…' : 'الدخول بحساب Google'}
-      </Button>
-      <ErrorLine message={error} />
-    </section>
-  );
-}
-
-function CreateHousehold({ user, onDone }: { user: AuthUser; onDone: () => void }) {
+function CreateHousehold({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -60,7 +29,7 @@ function CreateHousehold({ user, onDone }: { user: AuthUser; onDone: () => void 
     setBusy(true);
     setError(null);
     try {
-      await createHousehold(user, name);
+      await createLocalHousehold(name);
       onDone();
     } catch (err) {
       setError(toUserMessage(err));
@@ -72,7 +41,7 @@ function CreateHousehold({ user, onDone }: { user: AuthUser; onDone: () => void 
   return (
     <section className="card" aria-labelledby="create-title">
       <h2 id="create-title">إنشاء منزل</h2>
-      <p>المنزل هو مساحة بيانات أسرتك. اختر له اسمًا تتعرف عليه.</p>
+      <p>المنزل هو مساحة بيانات أسرتك على هذا الجهاز. اختر له اسمًا تتعرف عليه.</p>
       <form onSubmit={onSubmit} className="form">
         <label>
           اسم المنزل
@@ -87,15 +56,7 @@ function CreateHousehold({ user, onDone }: { user: AuthUser; onDone: () => void 
   );
 }
 
-function AddProfileForm({
-  user,
-  overview,
-  onDone,
-}: {
-  user: AuthUser;
-  overview: FamilyOverview;
-  onDone: () => void;
-}) {
+function AddProfileForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -106,13 +67,7 @@ function AddProfileForm({
     setBusy(true);
     setError(null);
     try {
-      await addFamilyProfile({
-        user,
-        householdId: overview.household.id,
-        role: overview.role,
-        rawName: name,
-        rawBirthDate: birthDate,
-      });
+      await addLocalProfile(name, birthDate);
       setName('');
       setBirthDate('');
       onDone();
@@ -141,21 +96,24 @@ function AddProfileForm({
   );
 }
 
-function Household({ user, overview, reload }: { user: AuthUser; overview: FamilyOverview; reload: () => void }) {
+function Household({ family, reload }: { family: LocalFamily; reload: () => void }) {
   return (
     <>
       <section className="card" aria-labelledby="hh-title">
-        <h2 id="hh-title">{overview.household.name}</h2>
-        <p>دورك: {ROLE_LABELS[overview.role]}</p>
+        <h2 id="hh-title">{family.household.name}</h2>
+        <StatusBadge kind="info" label="محفوظ على هذا الجهاز فقط" />
+        <p className="muted">
+          لا توجد نسخة احتياطية ولا مزامنة بعد. مسح بيانات المتصفح يحذف هذه البيانات.
+        </p>
       </section>
 
       <section className="card" aria-labelledby="profiles-title">
         <h2 id="profiles-title">أفراد الأسرة</h2>
-        {overview.profiles.length === 0 ? (
+        {family.profiles.length === 0 ? (
           <p className="muted">لم تُضف أي أفراد بعد.</p>
         ) : (
           <ul className="plain-list">
-            {overview.profiles.map((p) => (
+            {family.profiles.map((p) => (
               <li key={p.id}>
                 {p.name}
                 {p.birthDate && <span className="muted"> — وُلد {p.birthDate}</span>}
@@ -163,67 +121,29 @@ function Household({ user, overview, reload }: { user: AuthUser; overview: Famil
             ))}
           </ul>
         )}
-        {canEditProfiles(overview.role) ? (
-          <AddProfileForm user={user} overview={overview} onDone={reload} />
-        ) : (
-          <p className="muted">دورك لا يسمح بإضافة أفراد.</p>
-        )}
-      </section>
-
-      <section className="card" aria-labelledby="members-title">
-        <h2 id="members-title">أعضاء المنزل</h2>
-        <ul className="plain-list">
-          {overview.members.map((m) => (
-            <li key={m.uid}>
-              {m.displayName || 'عضو'} <span className="muted">({ROLE_LABELS[m.role]})</span>
-            </li>
-          ))}
-        </ul>
-        <p className="muted">دعوة أفراد الأسرة بحساباتهم تُضاف في المرحلة P1-ب.</p>
+        <AddProfileForm onDone={reload} />
       </section>
     </>
   );
 }
 
-function FamilyContent({ user }: { user: AuthUser }) {
-  const { state, reload } = useFamily(user);
-
-  if (state.status === 'loading') return <StatusBadge kind="info" label="جارٍ التحميل" />;
-  if (state.status === 'error') {
-    return (
-      <section className="card">
-        <ErrorLine message={state.message} />
-        <Button variant="secondary" onClick={reload}>
-          إعادة المحاولة
-        </Button>
-      </section>
-    );
-  }
-  if (state.status === 'none') return <CreateHousehold user={user} onDone={reload} />;
-  return <Household user={user} overview={state.overview} reload={reload} />;
-}
-
 export function FamilyPage() {
-  const auth = useAuth();
+  const { state, reload } = useFamily();
 
   return (
     <>
       <PageHeader title="الأسرة" subtitle="المنزل وأفراد الأسرة" />
-      {auth.loading ? (
-        <StatusBadge kind="info" label="جارٍ التحميل" />
-      ) : !auth.user ? (
-        <SignIn />
-      ) : (
-        <>
-          <p className="muted">
-            الحساب: {auth.user.displayName ?? auth.user.email}{' '}
-            <Button variant="secondary" onClick={() => void signOutUser()}>
-              تسجيل الخروج
-            </Button>
-          </p>
-          <FamilyContent user={auth.user} />
-        </>
+      {state.status === 'loading' && <StatusBadge kind="info" label="جارٍ التحميل" />}
+      {state.status === 'error' && (
+        <section className="card">
+          <ErrorLine message={state.message} />
+          <Button variant="secondary" onClick={reload}>
+            إعادة المحاولة
+          </Button>
+        </section>
       )}
+      {state.status === 'none' && <CreateHousehold onDone={reload} />}
+      {state.status === 'ready' && <Household family={state.family} reload={reload} />}
     </>
   );
 }
