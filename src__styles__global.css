@@ -262,3 +262,17 @@ details summary {
   align-items: center;
   font-weight: 600;
 }
+
+/* ===== إضافات الدفعة المحلية ===== */
+.thumb { object-fit: cover; border-radius: 8px; border: 1px solid var(--border, #ccc); }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; align-items: center; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.link-list a { display: block; padding: 12px 0; }
+.big-count { font-size: 1.4rem; font-weight: 700; }
+.print-only { display: none; }
+@media print {
+  .main-nav, .no-print, .btn { display: none !important; }
+  .print-only { display: block; }
+  .card { break-inside: avoid; box-shadow: none; }
+}
