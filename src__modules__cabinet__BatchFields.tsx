@@ -1,5 +1,6 @@
 import type { BatchInput } from '@/core/domain/inventoryRules';
-import { PACK_STATE_LABELS, SELECTABLE_PACK_STATES, type PackState } from '@/core/domain/inventoryTypes';
+import { PACK_STATE_LABELS, SELECTABLE_PACK_STATES } from '@/core/domain/inventoryTypes';
+import { SelectField, TextField } from '@/components/Fields';
 
 interface Props {
   value: BatchInput;
@@ -9,65 +10,37 @@ interface Props {
 }
 
 export function BatchFields({ value, onChange, unitsPerPack, baseUnit }: Props) {
-  const set = (key: keyof BatchInput) => (e: { target: { value: string } }) =>
-    onChange({ ...value, [key]: e.target.value });
+  const set = (key: keyof BatchInput) => (v: string) => onChange({ ...value, [key]: v });
 
   return (
     <>
-      <label>
-        تاريخ الصلاحية
-        <input
-          value={value.expiry}
-          onChange={set('expiry')}
-          placeholder="مثال: 06/2027"
-          inputMode="text"
-        />
-        <span className="muted">اكتب الشهر والسنة كما على العبوة، أو التاريخ الكامل.</span>
-      </label>
+      <TextField
+        label="تاريخ الصلاحية"
+        value={value.expiry}
+        onChange={set('expiry')}
+        placeholder="مثال: 06/2027"
+        hint="اكتب الشهر والسنة كما على العبوة، أو التاريخ الكامل."
+      />
+      <TextField label="تاريخ الإنتاج (اختياري)" value={value.productionDate} onChange={set('productionDate')} placeholder="مثال: 06/2024" />
 
       {unitsPerPack === 1 ? (
-        <label>
-          العدد ({baseUnit})
-          <input value={value.packs} onChange={set('packs')} inputMode="numeric" />
-        </label>
+        <TextField label={`العدد (${baseUnit})`} value={value.packs} onChange={set('packs')} inputMode="numeric" />
       ) : (
         <>
-          <label>
-            عدد العبوات (كل عبوة {unitsPerPack} {baseUnit})
-            <input value={value.packs} onChange={set('packs')} inputMode="numeric" />
-          </label>
-          <label>
-            {baseUnit} سائبة إضافية (اختياري)
-            <input value={value.units} onChange={set('units')} inputMode="numeric" />
-          </label>
+          <TextField label={`عدد العبوات (كل عبوة ${unitsPerPack} ${baseUnit})`} value={value.packs} onChange={set('packs')} inputMode="numeric" />
+          <TextField label={`${baseUnit} سائبة إضافية (اختياري)`} value={value.units} onChange={set('units')} inputMode="numeric" />
         </>
       )}
 
-      <label>
-        رقم التشغيلة (اختياري)
-        <input value={value.batchNo} onChange={set('batchNo')} maxLength={60} />
-      </label>
-      <label>
-        تاريخ الشراء (اختياري)
-        <input type="date" value={value.purchaseDate} onChange={set('purchaseDate')} />
-      </label>
-      <label>
-        مكان التخزين (اختياري)
-        <input value={value.location} onChange={set('location')} maxLength={60} />
-      </label>
-      <label>
-        حالة العبوة
-        <select
-          value={value.packState}
-          onChange={(e) => onChange({ ...value, packState: e.target.value as PackState })}
-        >
-          {SELECTABLE_PACK_STATES.map((s) => (
-            <option key={s} value={s}>
-              {PACK_STATE_LABELS[s]}
-            </option>
-          ))}
-        </select>
-      </label>
+      <TextField label="رقم التشغيلة المطبوع على العبوة (اختياري)" value={value.batchNo} onChange={set('batchNo')} maxLength={60} />
+      <TextField label="تاريخ الشراء (اختياري)" type="date" value={value.purchaseDate} onChange={set('purchaseDate')} />
+      <TextField label="مكان التخزين (اختياري)" value={value.location} onChange={set('location')} maxLength={60} />
+      <SelectField
+        label="حالة العبوة"
+        value={value.packState}
+        onChange={set('packState')}
+        options={SELECTABLE_PACK_STATES.map((s) => ({ value: s, label: PACK_STATE_LABELS[s] }))}
+      />
     </>
   );
 }

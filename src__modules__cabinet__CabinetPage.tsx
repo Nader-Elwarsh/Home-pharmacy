@@ -4,16 +4,18 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/Button';
 import { matchesQuery, type ItemRow } from '@/core/services/inventoryService';
+import { AttachmentThumb } from '@/components/AttachmentView';
 import { useCabinet } from './useCabinet';
 import { ITEM_STATUS } from './statusLabels';
 
-type Filter = 'all' | 'expiring_soon' | 'expired' | 'empty';
+type Filter = 'all' | 'expiring_soon' | 'expired' | 'empty' | 'low';
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: 'all', label: 'الكل' },
   { id: 'expiring_soon', label: 'قريب الانتهاء' },
   { id: 'expired', label: 'منتهي' },
   { id: 'empty', label: 'نفد' },
+  { id: 'low', label: 'كمية قليلة' },
 ];
 
 function ItemCard({ item }: { item: ItemRow }) {
@@ -21,13 +23,16 @@ function ItemCard({ item }: { item: ItemRow }) {
   return (
     <li>
       <Link className="item-link" to={`/cabinet/${item.id}`}>
+        {item.photoId && <AttachmentThumb id={item.photoId} size={48} />}{' '}
         <strong>{item.tradeName}</strong>
         {(item.strength || item.dosageForm) && (
           <span className="muted"> — {[item.strength, item.dosageForm].filter(Boolean).join(' ')}</span>
         )}
         <div>الكمية: {item.qtyText}</div>
+        {item.profileName && <div className="muted">لـ {item.profileName}</div>}
         {item.nearestExpiryText && <div className="muted">أقرب صلاحية: {item.nearestExpiryText}</div>}
         <StatusBadge kind={status.kind} label={status.label} />
+        {item.lowStock && <StatusBadge kind="warning" label="كمية قليلة" />}
       </Link>
     </li>
   );
@@ -41,7 +46,7 @@ export function CabinetPage() {
   const items = state.status === 'ready' ? state.data.items : [];
   const visible = useMemo(
     () =>
-      items.filter((i) => matchesQuery(i, query) && (filter === 'all' || i.status === filter)),
+      items.filter((i) => matchesQuery(i, query) && (filter === 'all' || (filter === 'low' ? i.lowStock : i.status === filter))),
     [items, query, filter],
   );
 

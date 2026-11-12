@@ -1,16 +1,8 @@
 import type { Table, UpdateSpec } from 'dexie';
 import { SCHEMA_VERSION, type BaseRecord } from '../database/db';
 
-let lastMs = 0;
-
-/**
- * وقت UTC بصيغة ISO، ويزداد دائمًا بمقدار 1 مللي ثانية على الأقل بين استدعاءين،
- * فلا يتساوى وقتا سجلين متتاليين ويثبت ترتيب العرض بحسب الإضافة.
- */
 export function nowIso(): string {
-  const now = Date.now();
-  lastMs = now > lastMs ? now : lastMs + 1;
-  return new Date(lastMs).toISOString();
+  return new Date().toISOString();
 }
 
 export function makeRecord<T extends BaseRecord>(

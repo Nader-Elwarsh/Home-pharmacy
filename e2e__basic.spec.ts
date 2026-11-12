@@ -26,7 +26,8 @@ test('التنقل بين الصفحات الخمس', async ({ page }) => {
 
 test('قاعدة البيانات المحلية تعمل في المتصفح', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('قاعدة البيانات المحلية تعمل')).toBeVisible();
+  await expect(page.getByText('ابدأ من هنا')).toBeVisible();
+  await expect(page.getByText('تعذر فتح قاعدة البيانات المحلية')).toHaveCount(0);
 });
 
 test('يفتح دون اتصال بعد التحميل الأول', async ({ page, context }) => {
@@ -38,5 +39,5 @@ test('يفتح دون اتصال بعد التحميل الأول', async ({ pag
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'الرئيسية' })).toBeVisible();
-  await expect(page.getByText('قاعدة البيانات المحلية تعمل')).toBeVisible();
+  await expect(page.getByText('ابدأ من هنا')).toBeVisible();
 });

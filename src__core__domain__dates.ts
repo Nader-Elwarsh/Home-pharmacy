@@ -78,6 +78,30 @@ export function parsePastOrTodayDate(raw: string, today: string): Validation<str
   return { ok: true, value: text };
 }
 
+/** تاريخ تقويمي اختياري YYYY-MM-DD دون قيد على الماضي أو المستقبل. الفارغ = غير مُدخل. */
+export function parseCalendarDate(raw: string): Validation<string | undefined> {
+  const text = normalizeDigits(raw).trim();
+  if (text === '') return { ok: true, value: undefined };
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(text);
+  if (!m) return { ok: false, error: 'صيغة التاريخ غير صحيحة' };
+  if (!isRealDate(Number(m[1]), Number(m[2]), Number(m[3]))) {
+    return { ok: false, error: 'التاريخ غير موجود' };
+  }
+  return { ok: true, value: text };
+}
+
+/** يضيف أيامًا (قد تكون سالبة) إلى تاريخ YYYY-MM-DD. */
+export function addDays(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d + days));
+  return ymd(dt.getUTCFullYear(), dt.getUTCMonth() + 1, dt.getUTCDate());
+}
+
+/** HH:MM المحلي. */
+export function timeString(now: Date = new Date()): string {
+  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+}
+
 /** عدد الأيام من from إلى to (موجب إن كان to بعد from). */
 export function daysBetween(from: string, to: string): number {
   const [fy, fm, fd] = from.split('-').map(Number);

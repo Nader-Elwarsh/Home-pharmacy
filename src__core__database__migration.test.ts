@@ -71,4 +71,39 @@ describe('ترحيل قاعدة البيانات', () => {
     upgraded.close();
     await Dexie.delete(name);
   });
+  it('الترقية من النسخة 3 (المخزون) إلى 4 تحفظ الأصناف والحركات وتضيف جداول الصحة', async () => {
+    const name = 'migration-v3-to-latest';
+    await Dexie.delete(name);
+
+    const v3 = new Dexie(name);
+    v3.version(3).stores({
+      appMeta: 'key',
+      households: 'id',
+      profiles: 'id, householdId, createdAt',
+      inventoryItems: 'id, householdId, barcode, createdAt',
+      batches: 'id, householdId, itemId, expiryDate',
+      stockTransactions: 'id, householdId, batchId, itemId, &opId, at',
+    });
+    await v3.open();
+    const ts = '2026-01-01T00:00:00.000Z';
+    await v3.table('inventoryItems').put({
+      id: 'i1', householdId: 'h1', tradeName: 'بنادول', baseUnit: 'قرص', unitsPerPack: 10,
+      schemaVersion: 1, createdAt: ts, updatedAt: ts,
+    });
+    await v3.table('stockTransactions').put({
+      id: 't1', householdId: 'h1', itemId: 'i1', batchId: 'b1', type: 'purchase', qtyBaseUnits: 10,
+      opId: 'op1', at: ts, schemaVersion: 1, createdAt: ts, updatedAt: ts,
+    });
+    v3.close();
+
+    const upgraded = new HomePharmacyDB(name);
+    await upgraded.open();
+    expect((await upgraded.inventoryItems.get('i1'))?.tradeName).toBe('بنادول');
+    expect((await upgraded.stockTransactions.get('t1'))?.qtyBaseUnits).toBe(10);
+    expect(upgraded.tables.map((t) => t.name)).toEqual(
+      expect.arrayContaining(['attachments', 'contacts', 'visits', 'documents', 'prescriptions', 'treatments', 'doseLogs', 'appointments', 'careTasks', 'shoppingItems']),
+    );
+    upgraded.close();
+    await Dexie.delete(name);
+  });
 });

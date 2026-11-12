@@ -1,8 +1,10 @@
 import { db, SCHEMA_VERSION, type HouseholdRecord, type ProfileRecord } from '../database/db';
-import { nowIso } from './records';
 
 export class HouseholdExistsError extends Error {}
 
+function nowIso(): string {
+  return new Date().toISOString();
+}
 
 export const familyRepository = {
   /** نموذج البيانات يدعم عدة منازل، لكن التطبيق المحلي يستخدم منزلًا واحدًا. */

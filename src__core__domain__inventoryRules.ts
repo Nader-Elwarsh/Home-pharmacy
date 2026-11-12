@@ -13,6 +13,10 @@ export interface ItemInput {
   unitsPerPack: string;
   barcode: string;
   notes: string;
+  /** حد التنبيه بانخفاض الكمية (بالوحدة الأساسية)، اختياري */
+  lowStockAt: string;
+  /** الدواء لمن؟ (معرّف فرد) اختياري */
+  profileId: string;
 }
 
 export const EMPTY_ITEM_INPUT: ItemInput = {
@@ -25,6 +29,8 @@ export const EMPTY_ITEM_INPUT: ItemInput = {
   unitsPerPack: '1',
   barcode: '',
   notes: '',
+  lowStockAt: '',
+  profileId: '',
 };
 
 export interface ItemData {
@@ -37,10 +43,14 @@ export interface ItemData {
   unitsPerPack: number;
   barcode?: string;
   notes?: string;
+  lowStockAt?: number;
+  profileId?: string;
 }
 
 export interface BatchInput {
   batchNo: string;
+  /** تاريخ الإنتاج، اختياري (YYYY-MM-DD) */
+  productionDate: string;
   expiry: string;
   purchaseDate: string;
   packs: string;
@@ -51,6 +61,7 @@ export interface BatchInput {
 
 export const EMPTY_BATCH_INPUT: BatchInput = {
   batchNo: '',
+  productionDate: '',
   expiry: '',
   purchaseDate: '',
   packs: '',
@@ -61,6 +72,7 @@ export const EMPTY_BATCH_INPUT: BatchInput = {
 
 export interface BatchData {
   batchNo?: string;
+  productionDate?: string;
   expiryDate: string;
   expiryPrecision: ExpiryPrecision;
   purchaseDate?: string;
@@ -121,7 +133,17 @@ export function validateItem(input: ItemInput): Validation<ItemData> {
   const barcode = validateBarcode(input.barcode);
   if (!barcode.ok) return barcode;
 
+  let lowStockAt: number | undefined;
+  if (input.lowStockAt.trim() !== '') {
+    const low = parseCount(input.lowStockAt, 'حد التنبيه', MAX_QTY);
+    if (!low.ok) return low;
+    lowStockAt = low.value;
+  }
+  const profileId = input.profileId.trim();
+
   const data: ItemData = { tradeName, baseUnit, unitsPerPack: upp.value };
+  if (lowStockAt !== undefined) data.lowStockAt = lowStockAt;
+  if (profileId) data.profileId = profileId;
   if (scientificName.value) data.scientificName = scientificName.value;
   if (activeIngredient.value) data.activeIngredient = activeIngredient.value;
   if (strength.value) data.strength = strength.value;
@@ -141,6 +163,12 @@ export function validateBatch(
 
   const purchase = parsePastOrTodayDate(input.purchaseDate, today);
   if (!purchase.ok) return purchase;
+
+  const production = parsePastOrTodayDate(input.productionDate, today);
+  if (!production.ok) return { ok: false, error: `تاريخ الإنتاج: ${production.error}` };
+  if (production.value && production.value > expiry.value.date) {
+    return { ok: false, error: 'تاريخ الإنتاج بعد تاريخ الصلاحية' };
+  }
 
   const packs = parseCount(input.packs, unitsPerPack === 1 ? 'العدد' : 'عدد العبوات', MAX_QTY);
   if (!packs.ok) return packs;
@@ -163,6 +191,7 @@ export function validateBatch(
     qtyBaseUnits: total,
   };
   if (batchNo.value) data.batchNo = batchNo.value;
+  if (production.value) data.productionDate = production.value;
   if (purchase.value) data.purchaseDate = purchase.value;
   if (location.value) data.location = location.value;
   return { ok: true, value: data };
